@@ -47,19 +47,17 @@ const Experience = () => {
 
   // ── Shadow / Day-Night traversal ─────────────────────────────────────────────
   useEffect(() => {
-    const lightness = isDayTime ? 1 : 0.2
     ;[scene, forestScene, ...forestScenes].forEach((s) => {
       s.traverse((child) => {
         if (!child.isMesh) return
         child.castShadow    = true
         child.receiveShadow = true
-        if (child.material) {
-          child.material.color.setHSL(0, 0, lightness)
-          child.material.needsUpdate = true
-        }
+        
+        // We removed the manual HSL color override that was washing out the scene
+        // Lighting and Environment presets now handle the day/night transitions naturally
       })
     })
-  }, [isDayTime, scene, forestScene, forestScenes])
+  }, [scene, forestScene, forestScenes])
 
   // ── Camera animation ─────────────────────────────────────────────────────────
   useEffect(() => {

@@ -1,7 +1,10 @@
 import React from 'react'
-import { Sphere, Float } from '@react-three/drei'
+import { Sphere } from '@react-three/drei'
+import { useStore } from '../../store/useStore'
 
 const VillageLights = () => {
+  const { isDayTime } = useStore()
+  
   // Approximate positions for houses and pool area
   const housePositions = [
     [5, 2, 5],
@@ -25,7 +28,11 @@ const VillageLights = () => {
       {housePositions.map((pos, i) => (
         <group key={`house-light-${i}`} position={pos}>
           <Sphere args={[0.2, 16, 16]}>
-            <meshBasicMaterial color="#FFD700" transparent opacity={0.8} />
+            <meshBasicMaterial 
+              color="#FFD700" 
+              transparent 
+              opacity={isDayTime ? 0.3 : 0.8} 
+            />
           </Sphere>
         </group>
       ))}
@@ -34,13 +41,22 @@ const VillageLights = () => {
       {poolPositions.map((pos, i) => (
         <group key={`pool-light-${i}`} position={pos}>
           <Sphere args={[0.1, 16, 16]}>
-            <meshBasicMaterial color="#FFD700" transparent opacity={0.6} />
+            <meshBasicMaterial 
+              color="#FFD700" 
+              transparent 
+              opacity={isDayTime ? 0.2 : 0.6} 
+            />
           </Sphere>
         </group>
       ))}
       
-      {/* Central Large Pool Glow */}
-      <pointLight position={[0, 0.1, 0]} intensity={20} distance={20} color="#FFD700" />
+      {/* Central Large Pool Glow - Dimmer during day to prevent overexposure */}
+      <pointLight 
+        position={[0, 0.1, 0]} 
+        intensity={isDayTime ? 5 : 20} 
+        distance={20} 
+        color="#FFD700" 
+      />
     </group>
   )
 }
