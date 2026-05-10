@@ -1,9 +1,12 @@
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
+const MAX_COUNT = 3000
+
 const Rain = ({ level = 'medium' }) => {
   const lines = useRef()
+  const geometryRef = useRef()
   
   // Dynamic properties based on level
   const count = level === 'high' ? 3000 : level === 'medium' ? 1500 : 500
@@ -12,47 +15,59 @@ const Rain = ({ level = 'medium' }) => {
   
   const wind = useMemo(() => new THREE.Vector3(windX, -1, 0.2).normalize(), [windX]) // Dynamic wind direction
   
-  const positions = useMemo(() => {
-    // Each line has 2 points (6 floats)
-    const pos = new Float32Array(count * 6)
-    for (let i = 0; i < count; i++) {
+  // Allocate buffer once for MAX_COUNT to avoid recreation and array size mismatches
+  const { positions, velocities } = useMemo(() => {
+    const pos = new Float32Array(MAX_COUNT * 6)
+    const vel = new Float32Array(MAX_COUNT)
+    
+    // Initialize all possible raindrops
+    for (let i = 0; i < MAX_COUNT; i++) {
       const x = (Math.random() - 0.5) * 250
       const y = Math.random() * 80
       const z = (Math.random() - 0.5) * 250
       
-      // Point 1
       pos[i * 6] = x
       pos[i * 6 + 1] = y
       pos[i * 6 + 2] = z
       
-      // Point 2 (offset by wind to create an angled streak)
-      pos[i * 6 + 3] = x - wind.x * lineLength
-      pos[i * 6 + 4] = y - wind.y * lineLength
-      pos[i * 6 + 5] = z - wind.z * lineLength
+      // We'll update the second point in useFrame or here initially
+      pos[i * 6 + 3] = x
+      pos[i * 6 + 4] = y
+      pos[i * 6 + 5] = z
+      
+      vel[i] = 1.0 + Math.random() * 1.5 // base velocity, scaled later
     }
-    return pos
+    return { positions: pos, velocities: vel }
+  }, [])
+
+  // Update draw range when count changes
+  useEffect(() => {
+    if (geometryRef.current) {
+      geometryRef.current.setDrawRange(0, count * 2)
+    }
   }, [count])
 
-  const velocities = useMemo(() => {
-    const vel = new Float32Array(count)
-    const baseSpeed = level === 'high' ? 2.5 : level === 'medium' ? 1.5 : 0.8
-    for (let i = 0; i < count; i++) {
-      vel[i] = baseSpeed + Math.random() * (baseSpeed * 0.5)
-    }
-    return vel
-  }, [count, level])
-
   useFrame(() => {
-    if (!lines.current) return
-    const pos = lines.current.geometry.attributes.position.array
+    if (!lines.current || !geometryRef.current) return
+    const pos = geometryRef.current.attributes.position.array
+    
+    const wx = wind.x
+    const wy = wind.y
+    const wz = wind.z
+    const speedMultiplier = level === 'high' ? 2.5 : level === 'medium' ? 1.5 : 0.8
+    
+    // Only loop through active count
     for (let i = 0; i < count; i++) {
+      const v = velocities[i] * speedMultiplier
+      
       // Move both points along the wind vector
-      pos[i * 6]     += wind.x * velocities[i]
-      pos[i * 6 + 1] += wind.y * velocities[i]
-      pos[i * 6 + 2] += wind.z * velocities[i]
-      pos[i * 6 + 3] += wind.x * velocities[i]
-      pos[i * 6 + 4] += wind.y * velocities[i]
-      pos[i * 6 + 5] += wind.z * velocities[i]
+      pos[i * 6]     += wx * v
+      pos[i * 6 + 1] += wy * v
+      pos[i * 6 + 2] += wz * v
+      
+      pos[i * 6 + 3] = pos[i * 6] - wx * lineLength
+      pos[i * 6 + 4] = pos[i * 6 + 1] - wy * lineLength
+      pos[i * 6 + 5] = pos[i * 6 + 2] - wz * lineLength
       
       // Reset if it goes below the ground
       if (pos[i * 6 + 1] < -20) {
@@ -64,20 +79,20 @@ const Rain = ({ level = 'medium' }) => {
         pos[i * 6 + 1] = y
         pos[i * 6 + 2] = z
         
-        pos[i * 6 + 3] = x - wind.x * lineLength
-        pos[i * 6 + 4] = y - wind.y * lineLength
-        pos[i * 6 + 5] = z - wind.z * lineLength
+        pos[i * 6 + 3] = x - wx * lineLength
+        pos[i * 6 + 4] = y - wy * lineLength
+        pos[i * 6 + 5] = z - wz * lineLength
       }
     }
-    lines.current.geometry.attributes.position.needsUpdate = true
+    geometryRef.current.attributes.position.needsUpdate = true
   })
 
   return (
     <lineSegments ref={lines}>
-      <bufferGeometry>
+      <bufferGeometry ref={geometryRef}>
         <bufferAttribute
           attach="attributes-position"
-          count={count * 2}
+          count={MAX_COUNT * 2}
           array={positions}
           itemSize={3}
         />

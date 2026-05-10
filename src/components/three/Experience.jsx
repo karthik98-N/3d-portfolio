@@ -12,6 +12,7 @@ import FloatingClouds from './FloatingClouds'
 import Rain from './Rain'
 import DynamicSun from './DynamicSun'
 import DynamicMoon from './DynamicMoon'
+import Thunder from './Thunder'
 
 // Detect mobile/tablet for performance scaling
 const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
@@ -111,7 +112,7 @@ const Experience = () => {
         enableZoom={true}
         enableRotate={true}
         autoRotate={currentView === 'home' && !isDroneMode}
-        autoRotateSpeed={0.3} // Very slow cinematic rotation
+        autoRotateSpeed={rainLevel === 'high' ? 0.05 : rainLevel === 'medium' ? 0.15 : 0.3} // Slower rotation during rain
         maxPolarAngle={isDroneMode ? Math.PI : Math.PI / 2.1}
         minPolarAngle={0}
         enableDamping
@@ -191,7 +192,12 @@ const Experience = () => {
 
         <Hotspots onSelect={handleHotspotSelect} />
         <FloatingClouds count={8} />
-        {rainLevel !== 'none' && <Rain level={rainLevel} />}
+        {rainLevel !== 'none' && (
+          <>
+            <Rain level={rainLevel} />
+            <Thunder rainLevel={rainLevel} />
+          </>
+        )}
 
         {/* Forest — 4 cardinal positions */}
         <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
