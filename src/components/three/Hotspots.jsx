@@ -24,7 +24,6 @@ const Hotspots = ({ onSelect }) => {
             <sphereGeometry args={[0.5, 32, 32]} />
             <meshBasicMaterial color="#38bdf8" transparent opacity={0.8} />
           </mesh>
-          <pointLight intensity={2} distance={5} color="#38bdf8" />
         </group>
       ))}
     </group>

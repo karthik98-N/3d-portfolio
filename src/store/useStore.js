@@ -5,7 +5,7 @@ export const useStore = create((set) => ({
   isStarted: false,
   isLoading: true,
   isDayTime: false,
-  isRaining: false,
+  rainLevel: 'none', // 'none', 'low', 'medium', 'high'
   isDroneMode: false,
   isEnvironmentFixed: false,
   dayPhase: 'noon', // 'sunrise', 'noon', 'evening'
@@ -17,7 +17,12 @@ export const useStore = create((set) => ({
   setStarted: (started) => set({ isStarted: started }),
   setLoading: (loading) => set({ isLoading: loading }),
   toggleDayTime: () => set((state) => ({ isDayTime: !state.isDayTime })),
-  toggleWeather: () => set((state) => ({ isRaining: !state.isRaining })),
+  nextRainLevel: () => set((state) => {
+    const levels = ['none', 'low', 'medium', 'high'];
+    const currentIndex = levels.indexOf(state.rainLevel);
+    const nextIndex = (currentIndex + 1) % levels.length;
+    return { rainLevel: levels[nextIndex] };
+  }),
   nextDayPhase: () => set((state) => {
     const phases = ['sunrise', 'noon', 'evening'];
     const currentIndex = phases.indexOf(state.dayPhase);

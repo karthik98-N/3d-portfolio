@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Stars, PerspectiveCamera, OrbitControls, Environment, useGLTF, Center, Sparkles, Sky } from '@react-three/drei'
+import { BakeShadows, Center, Environment, OrbitControls, Sky, Sparkles, Stars, PerspectiveCamera, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { useStore } from '../../store/useStore'
@@ -29,7 +29,7 @@ const DAY_GROUND_MATERIAL   = new THREE.MeshStandardMaterial({ color: '#2d4a1d',
 const NIGHT_GROUND_MATERIAL = new THREE.MeshStandardMaterial({ color: '#0a1a05', roughness: 1, metalness: 0 })
 
 const Experience = () => {
-  const { currentView, setView, isDayTime, isRaining, dayPhase, nightPhase, isDroneMode } = useStore()
+  const { currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode } = useStore()
   const cameraRef    = useRef()
   const controlsRef  = useRef()
   const groupRef     = useRef()
@@ -145,7 +145,7 @@ const Experience = () => {
         </>
       ) : (
         <>
-          <Stars radius={300} depth={60} count={10000} factor={7} saturation={0} fade speed={1} />
+          <Stars radius={300} depth={60} count={3000} factor={7} saturation={0} fade speed={1} />
           <Sparkles count={60} scale={50} size={2} speed={0.5} color="#ffffff" />
           <ambientLight intensity={ambientIntensity} color={nightPhase === 'early' ? '#94a3b8' : nightPhase === 'post' ? '#38bdf8' : '#ffffff'} />
           <directionalLight
@@ -154,6 +154,11 @@ const Experience = () => {
             color={nightPhase === 'early' ? '#cbd5e1' : nightPhase === 'post' ? '#7dd3fc' : '#ffffff'}
             castShadow
             shadow-mapSize={[512, 512]}
+            shadow-camera-far={200}
+            shadow-camera-left={-100}
+            shadow-camera-right={100}
+            shadow-camera-top={100}
+            shadow-camera-bottom={-100}
           />
           <spotLight position={[0, 15, 0]} intensity={5} distance={30} angle={Math.PI / 4} color="#ffffff" penumbra={1} />
           <DynamicMoon />
@@ -183,12 +188,12 @@ const Experience = () => {
         <VillageLights />
 
         {/* Fireflies — fewer on mobile, golden glow at night */}
-        <FlyingLights count={IS_MOBILE ? 10 : 20}  range={50}  intensity={isDayTime ? 0.3 : 2} color="#ffcc00" />
-        <FlyingLights count={IS_MOBILE ? 25 : 60}  range={300} intensity={isDayTime ? 0.1 : 4} color="#ffaa00" />
+        <FlyingLights count={IS_MOBILE ? 20 : 50}   range={100} intensity={isDayTime ? 0.3 : 2} color="#ffcc00" />
+        <FlyingLights count={IS_MOBILE ? 100 : 300} range={500} intensity={isDayTime ? 0.1 : 4} color="#ffaa00" />
 
         <Hotspots onSelect={handleHotspotSelect} />
         <FloatingClouds count={8} />
-        {isRaining && <Rain count={2000} />}
+        {rainLevel !== 'none' && <Rain level={rainLevel} />}
 
         {/* Forest — 4 cardinal positions */}
         <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
@@ -202,8 +207,12 @@ const Experience = () => {
         </mesh>
       </group>
 
-      <Environment preset={isDayTime ? 'city' : 'night'} />
+      <BakeShadows />
+      <Environment preset={isDayTime ? 'city' : 'night'} resolution={256} />
       <color attach="background" args={[isDayTime ? '#87ceeb' : '#010101']} />
+      {rainLevel === 'low' && <fog attach="fog" args={['#334155', 40, 250]} />}
+      {rainLevel === 'medium' && <fog attach="fog" args={['#1e293b', 20, 150]} />}
+      {rainLevel === 'high' && <fog attach="fog" args={['#0f172a', 10, 80]} />}
     </>
   )
 }

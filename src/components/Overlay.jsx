@@ -1,14 +1,14 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, Cpu } from 'lucide-react'
+import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu } from 'lucide-react'
 import useBreakpoint from '../hooks/useBreakpoint'
 
 const Overlay = () => {
   const {
     currentView, setView, isStarted,
     isDayTime, toggleDayTime,
-    isRaining, toggleWeather,
+    rainLevel, nextRainLevel,
     dayPhase, nextDayPhase,
     nightPhase, nextNightPhase,
     isDroneMode, toggleDroneMode,
@@ -118,11 +118,12 @@ const Overlay = () => {
           />
         </button>
 
-        {/* Weather */}
-        <button onClick={toggleWeather} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
-          {isRaining
-            ? <CloudRain size={mobile ? 16 : 20} style={{ color: '#38bdf8', filter: 'drop-shadow(0 0 5px #38bdf8)' }} />
-            : <Cloud     size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
+        {/* Weather Multi-Level */}
+        <button onClick={nextRainLevel} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+          {rainLevel === 'none' && <Cloud size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
+          {rainLevel === 'low' && <CloudDrizzle size={mobile ? 16 : 20} style={{ color: '#7dd3fc', filter: 'drop-shadow(0 0 2px #7dd3fc)' }} />}
+          {rainLevel === 'medium' && <CloudRain size={mobile ? 16 : 20} style={{ color: '#38bdf8', filter: 'drop-shadow(0 0 5px #38bdf8)' }} />}
+          {rainLevel === 'high' && <CloudLightning size={mobile ? 16 : 20} style={{ color: '#0ea5e9', filter: 'drop-shadow(0 0 8px #0ea5e9)' }} />}
         </button>
 
         {/* Drone Mode */}

@@ -24,7 +24,6 @@ const VillageLights = () => {
       {/* House Lights - Warm Gold */}
       {housePositions.map((pos, i) => (
         <group key={`house-light-${i}`} position={pos}>
-          <pointLight intensity={10} distance={15} color="#FFD700" castShadow />
           <Sphere args={[0.2, 16, 16]}>
             <meshBasicMaterial color="#FFD700" transparent opacity={0.8} />
           </Sphere>
@@ -34,7 +33,6 @@ const VillageLights = () => {
       {/* Pool Area Lights - Brighter Gold Glow */}
       {poolPositions.map((pos, i) => (
         <group key={`pool-light-${i}`} position={pos}>
-          <pointLight intensity={5} distance={10} color="#FFD700" />
           <Sphere args={[0.1, 16, 16]}>
             <meshBasicMaterial color="#FFD700" transparent opacity={0.6} />
           </Sphere>
