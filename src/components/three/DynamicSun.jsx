@@ -13,19 +13,19 @@ const DynamicSun = () => {
     sunrise: {
       position: [-150, 40, -100],
       color: '#f59e0b',
-      intensity: 4,
+      intensity: 2,
       scale: 25
     },
     noon: {
       position: [0, 150, -80],
       color: '#ffffff',
-      intensity: 6,
+      intensity: 3,
       scale: 35
     },
     evening: {
       position: [150, 45, -100],
       color: '#f43f5e',
-      intensity: 5,
+      intensity: 2.5,
       scale: 30
     }
   }
@@ -49,7 +49,7 @@ const DynamicSun = () => {
         scale={current.scale} 
       />
       <pointLight 
-        intensity={current.intensity * 2} 
+        intensity={current.intensity * 1.5} 
         color={current.color} 
         distance={200}
         decay={2}

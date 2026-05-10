@@ -98,7 +98,7 @@ const Experience = () => {
 
   // ── Derived sky / light values (computed once per render, not per frame) ─────
   const sunPos = dayPhase === 'sunrise' ? [-150, 40, -100] : dayPhase === 'noon' ? [0, 150, -80] : [150, 45, -100]
-  const ambientIntensity = isDayTime ? (dayPhase === 'noon' ? 1.5 : 1.0) : (nightPhase === 'mid' ? 0.3 : 0.15)
+  const ambientIntensity = isDayTime ? (dayPhase === 'noon' ? 0.8 : 0.6) : (nightPhase === 'mid' ? 0.3 : 0.15)
   const groundMat = isDayTime ? DAY_GROUND_MATERIAL : NIGHT_GROUND_MATERIAL
 
   return (
@@ -121,14 +121,14 @@ const Experience = () => {
       {/* ── Lighting ─────────────────────────────────────────────────────────── */}
       {isDayTime ? (
         <>
-          <Sky sunPosition={sunPos} />
+          <Sky sunPosition={sunPos} turbidity={0.1} rayleigh={0.5} />
           <ambientLight
             intensity={ambientIntensity}
             color={dayPhase === 'sunrise' ? '#ff9d00' : dayPhase === 'evening' ? '#ff5e00' : '#ffffff'}
           />
           <directionalLight
             position={sunPos}
-            intensity={dayPhase === 'noon' ? 3 : 2}
+            intensity={dayPhase === 'noon' ? 1.5 : 1.2}
             color={dayPhase === 'sunrise' ? '#ffcc00' : dayPhase === 'evening' ? '#ff4400' : '#ffffff'}
             castShadow
             shadow-mapSize={[1024, 1024]}
@@ -205,8 +205,7 @@ const Experience = () => {
         </mesh>
       </group>
 
-      <BakeShadows />
-      <Environment preset={isDayTime ? 'city' : 'night'} resolution={256} />
+      <Environment preset={isDayTime ? 'sunset' : 'night'} resolution={512} />
       <color attach="background" args={[isDayTime ? '#87ceeb' : '#010101']} />
       {rainLevel === 'low' && <fog attach="fog" args={['#334155', 40, 250]} />}
       {rainLevel === 'medium' && <fog attach="fog" args={['#1e293b', 20, 150]} />}

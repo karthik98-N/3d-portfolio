@@ -62,6 +62,8 @@ function App() {
           antialias: false,
           powerPreference: 'high-performance',
           outputColorSpace: THREE.SRGBColorSpace,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.0,
         }}
         dpr={[1, Math.min(window.devicePixelRatio, 1.2)]}
         performance={{ min: 0.5 }}
