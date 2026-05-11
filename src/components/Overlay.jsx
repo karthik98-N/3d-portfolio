@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/useStore'
 import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2, Video, VideoOff, Ruler } from 'lucide-react'
 import EagleControlsUI from './EagleControlsUI'
-import HorseSettingsUI from './HorseSettingsUI'
-import HorseControlsUI from './HorseControlsUI'
+
 import useBreakpoint from '../hooks/useBreakpoint'
 
 const Overlay = () => {
@@ -357,8 +356,7 @@ const Overlay = () => {
 
       {/* ── Eagle Controls (Overlay) ────────────────────────────────────────── */}
       <EagleControlsUI />
-      <HorseSettingsUI />
-      <HorseControlsUI />
+
     </div>
   )
 }
