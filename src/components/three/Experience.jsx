@@ -39,51 +39,46 @@ const Experience = () => {
   const controlsRef  = useRef()
   const groupRef     = useRef()
 
-  const originalMaterials = useMemo(() => new WeakMap(), [])
   const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     wireframe: true,
     transparent: true,
     opacity: 1,
-    color: '#00ffff' // Initial color, will be animated
+    color: '#00ffff' 
   }), [])
 
   // ── Model Loading ────────────────────────────────────────────────────────────
   const { scene }  = useGLTF('/jadeite_village_environment.glb')
   const { scene: forestScene } = useGLTF('/low_poly_forest.glb')
 
-  // Clone forest instances once via useMemo
-  const forestScenes = useMemo(() => [
-    forestScene.clone(),
-    forestScene.clone(),
-    forestScene.clone(),
-  ], [forestScene])
-
-  // ── Toggle RGB Wireframe / Normal Textures ────────────────────────────────────
-  useEffect(() => {
-    const targets = [scene, forestScene, ...forestScenes]
-    targets.forEach((s) => {
-      if (!s) return
-      s.traverse((child) => {
-        if (!child.isMesh) return
-        
-        if (!isStarted) {
-          // Store original material if not already stored
-          if (!originalMaterials.has(child)) {
-            originalMaterials.set(child, child.material)
-          }
-          child.material = wireframeMaterial
-        } else {
-          // Restore original material
-          const orig = originalMaterials.get(child)
-          if (orig) child.material = orig
-        }
-      })
+  // Create Digital versions of the scenes once
+  const digitalScene = useMemo(() => {
+    if (!scene) return null
+    const clone = scene.clone()
+    clone.traverse(child => {
+      if (child.isMesh) child.material = wireframeMaterial
     })
-  }, [isStarted, scene, forestScene, forestScenes, wireframeMaterial, originalMaterials])
+    return clone
+  }, [scene, wireframeMaterial])
+
+  const forestScenes = useMemo(() => {
+    if (!forestScene) return []
+    return [forestScene.clone(), forestScene.clone(), forestScene.clone()]
+  }, [forestScene])
+
+  const forestDigitalScenes = useMemo(() => {
+    if (!forestScene) return []
+    return [forestScene.clone(), forestScene.clone(), forestScene.clone()].map(s => {
+      s.traverse(child => {
+        if (child.isMesh) child.material = wireframeMaterial
+      })
+      return s
+    })
+  }, [forestScene, wireframeMaterial])
 
   // ── Shadow / Day-Night traversal ─────────────────────────────────────────────
   useEffect(() => {
-    ;[scene, forestScene, ...forestScenes].forEach((s) => {
+    const targets = [scene, forestScene, ...forestScenes]
+    targets.forEach((s) => {
       if (!s) return
       s.traverse((child) => {
         if (!child.isMesh) return
@@ -270,24 +265,29 @@ const Experience = () => {
         </>
       )}
 
-      {/* ── Scene Objects ─────────────────────────────────────────────────────── */}
+      {/* ── Environment Models ────────────────────────────────────────────────── */}
       <group ref={groupRef}>
-        {/* Village */}
-        <Center top position={[0, -2, 0]}>
-          <primitive
-            object={scene}
-            scale={1.3}
-            onClick={(e) => {
-              e.stopPropagation()
-              const name = e.object.name.toLowerCase()
-              if (name.includes('house') || name.includes('building')) setView('about')
-            }}
-            onPointerOver={(e) => {
-              if (e.object.name.toLowerCase().includes('house')) document.body.style.cursor = 'pointer'
-            }}
-            onPointerOut={() => (document.body.style.cursor = 'auto')}
-          />
-        </Center>
+        {/* Normal Village (Visible after start) */}
+        <group visible={isStarted}>
+          <Center top position={[0, -2, 0]}>
+            <primitive object={scene} scale={1.3} />
+          </Center>
+          <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
+          <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
+          <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
+          <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
+        </group>
+
+        {/* Digital Village (Visible before start) */}
+        <group visible={!isStarted}>
+          <Center top position={[0, -2, 0]}>
+            {digitalScene && <primitive object={digitalScene} scale={1.3} />}
+          </Center>
+          <Center top position={[0,   -30,  80]}><primitive object={forestDigitalScenes[0]} scale={[50,50,50]} /></Center>
+          <Center top position={[0,   -30, -80]}><primitive object={forestDigitalScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
+          <Center top position={[80,  -30,  0]} ><primitive object={forestDigitalScenes[2]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
+          <Center top position={[-80, -30,  0]} ><primitive object={forestDigitalScenes[3]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
+        </group>
 
         <DynamicCore />
         <VillageLights />
@@ -309,13 +309,6 @@ const Experience = () => {
         <Flock count={25} />
         <Eagle />
         <Horse />
-
-
-        {/* Forest — 4 cardinal positions */}
-        <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
-        <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
-        <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
-        <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
 
         {/* Ground plane */}
         <mesh rotation-x={-Math.PI / 2} position={[0, -2.1, 0]} receiveShadow material={groundMat}>
