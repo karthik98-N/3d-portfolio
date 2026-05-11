@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2 } from 'lucide-react'
+import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2, Video, VideoOff } from 'lucide-react'
 import EagleControlsUI from './EagleControlsUI'
 import useBreakpoint from '../hooks/useBreakpoint'
 
@@ -15,7 +15,8 @@ const Overlay = () => {
     isDroneMode, toggleDroneMode,
     isPlacementMode, togglePlacementMode,
     eagleScale, setEagleScale,
-    eagleMovementParams, setEagleMovementParams
+    eagleMovementParams, setEagleMovementParams,
+    isFreeLook, setIsFreeLook
   } = useStore()
   const [isEagleSettingsOpen, setIsEagleSettingsOpen] = React.useState(false)
   const { isMobile } = useBreakpoint()
@@ -106,6 +107,17 @@ const Overlay = () => {
           {isDayTime
             ? <Sun  size={mobile ? 16 : 20} style={{ color: '#fbbf24' }} />
             : <Moon size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
+        </button>
+
+        {/* Free Look Toggle */}
+        <button 
+          onClick={() => setIsFreeLook(!isFreeLook)} 
+          title={isFreeLook ? 'Exit Free Look' : 'Enter Free Look'}
+          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
+        >
+          {isFreeLook 
+            ? <Video size={mobile ? 16 : 20} style={{ color: '#38bdf8', filter: 'drop-shadow(0 0 5px #38bdf8)' }} />
+            : <VideoOff size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
         </button>
 
         {/* Phase cycler */}

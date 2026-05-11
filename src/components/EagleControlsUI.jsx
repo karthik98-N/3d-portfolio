@@ -120,34 +120,6 @@ const EagleControlsUI = () => {
               <ControlButton icon={<ChevronDown size={24} />} action="down" setEagleMovement={setEagleMovement} />
             </div>
           </div>
-
-          {/* Center-ish: Free Look Toggle (Flex-grow will push it) */}
-          <div style={{ pointerEvents: 'auto', marginBottom: '24px', flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={() => setIsFreeLook(!isFreeLook)}
-              className="glass-panel mono"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 24px',
-                borderRadius: '12px',
-                border: isFreeLook ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.2)',
-                color: isFreeLook ? '#38bdf8' : '#94a3b8',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '14px',
-                background: 'rgba(0,0,0,0.6)',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              {isFreeLook ? <Video size={18} /> : <VideoOff size={18} />}
-              {isFreeLook ? 'FREE LOOK: ON' : 'FREE LOOK: OFF'}
-            </button>
-          </div>
-          
-          {/* Empty spacer for balance if needed */}
-          <div style={{ width: '150px' }} />
         </motion.div>
       )}
     </AnimatePresence>

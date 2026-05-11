@@ -42,7 +42,16 @@ const Eagle = () => {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isPlacementMode])
+  }, [isPlacementMode, isFreeLook, setIsFreeLook])
+
+  // Ensure Free Look is ON by default when entering Eagle Mode
+  useEffect(() => {
+    if (isDroneMode) {
+      setIsFreeLook(true)
+    } else {
+      setIsFreeLook(false)
+    }
+  }, [isDroneMode, setIsFreeLook])
 
   // Initialize and update eagle scale/position based on mode
   useEffect(() => {
