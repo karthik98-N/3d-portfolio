@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Environment, OrbitControls, Sky, PerspectiveCamera, useGLTF } from '@react-three/drei'
+import { Environment, OrbitControls, Sky, PerspectiveCamera, useGLTF, Stars, Sparkles, Center } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { useStore } from '../../store/useStore'
@@ -285,9 +285,9 @@ const Experience = () => {
 
         {/* Forest — 4 cardinal positions */}
         <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
-        <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
-        <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
-        <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
+        {forestScenes[0] && <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>}
+        {forestScenes[1] && <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>}
+        {forestScenes[2] && <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>}
 
         {/* Ground plane */}
         <mesh rotation-x={-Math.PI / 2} position={[0, -2.1, 0]} receiveShadow material={groundMat}>
