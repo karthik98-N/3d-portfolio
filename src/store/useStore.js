@@ -43,11 +43,16 @@ export const useStore = create((set) => ({
   setHorseGroundAdjustment: (adj) => set({ horseGroundAdjustment: adj }),
   setHorseTransformMode: (mode) => set({ horseTransformMode: mode }),
   toggleHorsePlacementMode: () => set((state) => ({ isHorsePlacementMode: !state.isHorsePlacementMode })),
-  toggleHorseMode: () => set((state) => ({ 
-    isHorseMode: !state.isHorseMode, 
-    isHorsePlacementMode: false,
-    isDroneMode: false 
-  })),
+  toggleHorseMode: () => set((state) => {
+    const nextHorseMode = !state.isHorseMode;
+    return { 
+      isHorseMode: nextHorseMode, 
+      isHorsePlacementMode: false,
+      isDroneMode: false,
+      // If turning OFF horse mode, go back to home view
+      ...( !nextHorseMode ? { currentView: 'home' } : {} )
+    };
+  }),
   setHorseMovement: (movement) => set((state) => ({ horseMovement: { ...state.horseMovement, ...movement } })),
   toggleDroneMode: () => set((state) => {
     const nextDroneMode = !state.isDroneMode;

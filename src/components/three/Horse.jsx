@@ -8,7 +8,7 @@ const FLOOR_Y      = -2.1
 const WALK_SPEED   = 2
 const SPRINT_SPEED = 10
 const TURN_SPEED   = 1.5
-const FRICTION     = 0.75
+const FRICTION     = 0.85
 const CAM_BEHIND   = 9.5
 const CAM_UP       = 6.5
 const CAM_LERP     = 0.06
@@ -202,7 +202,7 @@ const Horse = () => {
     const bobFreq      = isMoving ? (5 + speedFactor * 7) : 0
     const bob = Math.sin(state.clock.getElapsedTime() * bobFreq) * bobAmplitude
     const finalY = targetY + (feetOffset.current * horseScale[0]) + horseGroundAdjustment + Math.max(0, bob)
-    horse.position.y = THREE.MathUtils.lerp(horse.position.y, finalY, 0.2)
+    horse.position.y = THREE.MathUtils.lerp(horse.position.y, finalY, 0.1)
 
     // ── Camera ────────────────────────────────────────────────────────────
     const behindDir = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current))
@@ -216,7 +216,7 @@ const Horse = () => {
     if (controls) controls.target.copy(cameraTarget.current)
   })
 
-  if (!scene) return null
+  if (!scene || (!isHorseMode && !isHorsePlacementMode)) return null
 
   return (
     <>

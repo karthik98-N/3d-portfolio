@@ -23,8 +23,8 @@ const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
 
 // View positions defined outside component — stable reference, no re-creation on render
 const VIEW_POSITIONS = {
-  home:     { pos: [-100, 225, 100], lookAt: [0, 50, 0], fov: 45 },
-  about:    { pos: [-25, 18, 65],   lookAt: [-35, 20, 75], fov: 40 },
+  home:     { pos: [-100, 225, 100], lookAt: [0, 50, 0],  fov: 45 },
+  about:    { pos: [35, 12, 115],   lookAt: [0, 8, 20],  fov: 45 },
   projects: { pos: [70, 52.5, 60],  lookAt: [8, 15, 4],  fov: 35 },
   contact:  { pos: [-35, 37.5, -60], lookAt: [0, 50, 0],  fov: 45 },
 }
@@ -34,10 +34,20 @@ const DAY_GROUND_MATERIAL   = new THREE.MeshStandardMaterial({ color: '#2d4a1d',
 const NIGHT_GROUND_MATERIAL = new THREE.MeshStandardMaterial({ color: '#0a1a05', roughness: 1, metalness: 0 })
 
 const Experience = () => {
-  const { currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode, isPlacementMode, isHorseMode } = useStore()
+  const { isStarted, currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode, isPlacementMode, isHorseMode } = useStore()
   const cameraRef    = useRef()
   const controlsRef  = useRef()
   const groupRef     = useRef()
+
+  const originalMaterials = useMemo(() => new WeakMap(), [])
+  const wireframeMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    wireframe: true,
+    transparent: true,
+    opacity: 0.6,
+    emissiveIntensity: 1.5,
+    metalness: 0,
+    roughness: 1,
+  }), [])
 
   // ── Model Loading ────────────────────────────────────────────────────────────
   const { scene }  = useGLTF('/jadeite_village_environment.glb')
@@ -50,16 +60,37 @@ const Experience = () => {
     forestScene.clone(),
   ], [forestScene])
 
+  // ── Toggle RGB Wireframe / Normal Textures ────────────────────────────────────
+  useEffect(() => {
+    const targets = [scene, forestScene, ...forestScenes]
+    targets.forEach((s) => {
+      if (!s) return
+      s.traverse((child) => {
+        if (!child.isMesh) return
+        
+        if (!isStarted) {
+          // Store original material if not already stored
+          if (!originalMaterials.has(child)) {
+            originalMaterials.set(child, child.material)
+          }
+          child.material = wireframeMaterial
+        } else {
+          // Restore original material
+          const orig = originalMaterials.get(child)
+          if (orig) child.material = orig
+        }
+      })
+    })
+  }, [isStarted, scene, forestScene, forestScenes, wireframeMaterial, originalMaterials])
+
   // ── Shadow / Day-Night traversal ─────────────────────────────────────────────
   useEffect(() => {
     ;[scene, forestScene, ...forestScenes].forEach((s) => {
+      if (!s) return
       s.traverse((child) => {
         if (!child.isMesh) return
         child.castShadow    = true
         child.receiveShadow = true
-        
-        // We removed the manual HSL color override that was washing out the scene
-        // Lighting and Environment presets now handle the day/night transitions naturally
       })
     })
   }, [scene, forestScene, forestScenes])
@@ -67,7 +98,12 @@ const Experience = () => {
   // ── Camera animation ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!cameraRef.current || isDroneMode || isPlacementMode || isHorseMode) return
-    const target = VIEW_POSITIONS[currentView] ?? VIEW_POSITIONS.home
+    
+    // Don't force-tween the camera for the 'home' view to allow for totally free movement
+    if (currentView === 'home') return
+
+    const target = VIEW_POSITIONS[currentView]
+    if (!target) return
 
     gsap.killTweensOf(cameraRef.current.position)
     gsap.killTweensOf(cameraRef.current)
@@ -96,12 +132,75 @@ const Experience = () => {
     gsap.to(controlsRef.current.target, { x: 0, y: 0, z: 0, duration: 2, ease: 'power2.inOut' })
   }, [])
 
-  // ── Per-frame update (only when needed) ──────────────────────────────────────
-  useFrame(() => {
-    controlsRef.current?.update()
+  const keys = useRef({})
+  useEffect(() => {
+    const down = (e) => { keys.current[e.key.toLowerCase()] = true }
+    const up   = (e) => { keys.current[e.key.toLowerCase()] = false }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
+  }, [])
+
+  const isInteractingRef = useRef(false)
+  const lastInteractionTime = useRef(0)
+
+  // ── Per-frame update ──────────────────────────────────────────────────────────
+  useFrame((state) => {
+    const controls = controlsRef.current
+    if (!controls) return
+
+    // ── Animate Global RGB Wireframe ─────────────────────────────────────────
+    if (!isStarted) {
+      const hue = (state.clock.getElapsedTime() * 0.15) % 1
+      const color = new THREE.Color().setHSL(hue, 0.8, 0.5)
+      wireframeMaterial.color.copy(color)
+      wireframeMaterial.emissive.copy(color)
+    }
+
+    // ── Keyboard Roam for Normal Mode (All views) ───────────────────────────
+    if (!isDroneMode && !isHorseMode && isStarted) {
+      const isSprinting = keys.current['shift']
+      const moveSpeed = isSprinting ? 1.5 : 0.5
+      const cam = cameraRef.current
+      if (cam) {
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion).setY(0).normalize()
+        const right   = new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion).setY(0).normalize()
+        
+        let moved = false
+        if (keys.current['w'] || keys.current['arrowup'])    { cam.position.addScaledVector(forward, moveSpeed); controls.target.addScaledVector(forward, moveSpeed); moved = true }
+        if (keys.current['s'] || keys.current['arrowdown'])  { cam.position.addScaledVector(forward, -moveSpeed); controls.target.addScaledVector(forward, -moveSpeed); moved = true }
+        if (keys.current['a'] || keys.current['arrowleft'])  { cam.position.addScaledVector(right, -moveSpeed); controls.target.addScaledVector(right, -moveSpeed); moved = true }
+        if (keys.current['d'] || keys.current['arrowright']) { cam.position.addScaledVector(right, moveSpeed); controls.target.addScaledVector(right, moveSpeed); moved = true }
+        if (keys.current['q']) { cam.position.y += moveSpeed; moved = true }
+        if (keys.current['e']) { cam.position.y -= moveSpeed; moved = true }
+
+        if (moved) {
+          lastInteractionTime.current = state.clock.getElapsedTime()
+        }
+      }
+    }
+
+    // Detect interaction (dragging or zooming)
+    if (isInteractingRef.current) {
+      lastInteractionTime.current = state.clock.getElapsedTime()
+      controls.update()
+      return
+    }
+
+    controls.update()
+
+    // ── Drone-style drift for Home View (only if idle for 8s and no keys pressed) ──
+    const isKeyPressed = Object.values(keys.current).some(v => v)
+    const idleTime = state.clock.getElapsedTime() - lastInteractionTime.current
+    if (currentView === 'home' && !isDroneMode && !isHorseMode && cameraRef.current && idleTime > 8 && !isKeyPressed) {
+      const t = state.clock.getElapsedTime()
+      cameraRef.current.position.y = THREE.MathUtils.lerp(cameraRef.current.position.y, VIEW_POSITIONS.home.pos[1] + Math.sin(t * 0.2) * 5, 0.05)
+      cameraRef.current.fov = THREE.MathUtils.lerp(cameraRef.current.fov, VIEW_POSITIONS.home.fov + Math.sin(t * 0.1) * 2, 0.05)
+      cameraRef.current.updateProjectionMatrix()
+    }
   })
 
-  // ── Derived sky / light values (computed once per render, not per frame) ─────
+  // ── Derived sky / light values ─────────────────────────────────────────────
   const sunPos = dayPhase === 'sunrise' ? [-150, 40, -100] : dayPhase === 'noon' ? [0, 150, -80] : [150, 45, -100]
   const ambientIntensity = isDayTime ? (dayPhase === 'noon' ? 0.8 : 0.6) : (nightPhase === 'mid' ? 0.3 : 0.15)
   const groundMat = isDayTime ? DAY_GROUND_MATERIAL : NIGHT_GROUND_MATERIAL
@@ -113,15 +212,17 @@ const Experience = () => {
         ref={controlsRef}
         makeDefault
         enabled={!isHorseMode}
-        enablePan={false}
+        onStart={() => { isInteractingRef.current = true }}
+        onEnd={() => { isInteractingRef.current = false }}
+        enablePan={true}
         enableZoom={true}
         enableRotate={true}
         zoomSpeed={1.5}
-        minDistance={10}
-        maxDistance={800}
+        minDistance={5}
+        maxDistance={1000}
         autoRotate={currentView === 'home' && !isDroneMode && !isHorseMode}
-        autoRotateSpeed={rainLevel === 'high' ? 0.05 : rainLevel === 'medium' ? 0.15 : 0.3}
-        maxPolarAngle={isDroneMode ? Math.PI : Math.PI / 2.1}
+        autoRotateSpeed={0.3}
+        maxPolarAngle={Math.PI}
         minPolarAngle={0}
         enableDamping
         dampingFactor={0.05}
