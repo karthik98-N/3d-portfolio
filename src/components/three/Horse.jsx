@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useAnimations, TransformControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -15,6 +15,7 @@ const CAM_LERP     = 0.06
 
 const Horse = () => {
   const horseRef = useRef()
+  const [horseGroup, setHorseGroup] = useState(null)
   const gltf = useGLTF('/horse.glb')
   const { scene, animations } = gltf || {}
   const { actions } = useAnimations(animations || [], horseRef)
@@ -96,21 +97,14 @@ const Horse = () => {
     return () => Object.values(actions).forEach(action => action?.stop())
   }, [actions])
 
-  // ── Controls ───────────────────────────────────────────────────────────────
+  // ── Keyboard Roam ───────────────────────────────────────────────────────────
   useEffect(() => {
-    const keyMap = {
-      KeyW: 'forward', ArrowUp: 'forward',
-      KeyS: 'backward', ArrowDown: 'backward',
-      KeyA: 'left', ArrowLeft: 'left',
-      KeyD: 'right', ArrowRight: 'right',
-      ShiftLeft: 'sprint', ShiftRight: 'sprint',
-    }
-    const down = (e) => { if (isHorseMode) { const k = keyMap[e.code]; if (k) setHorseMovement({ [k]: true }) } }
-    const up   = (e) => { const k = keyMap[e.code]; if (k) setHorseMovement({ [k]: false }) }
+    const down = (e) => { if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(e.key.toLowerCase())) setHorseMovement({ [e.key.toLowerCase().replace('arrowup','forward').replace('arrowdown','backward').replace('arrowleft','left').replace('arrowright','right')]: true }) }
+    const up   = (e) => { if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(e.key.toLowerCase())) setHorseMovement({ [e.key.toLowerCase().replace('arrowup','forward').replace('arrowdown','backward').replace('arrowleft','left').replace('arrowright','right')]: false }) }
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [isHorseMode, setHorseMovement])
+  }, [setHorseMovement])
 
   useEffect(() => {
     if (!isHorseMode) setHorseMovement({ forward: false, backward: false, left: false, right: false, sprint: false })
@@ -121,9 +115,9 @@ const Horse = () => {
   const downVector = useMemo(() => new THREE.Vector3(0, -1, 0), [])
 
   useFrame((state, delta) => {
-    if (!horseRef.current || !scene || isHorsePlacementMode) return
+    if (!horseGroup || !scene || isHorsePlacementMode) return
 
-    const horse = horseRef.current
+    const horse = horseGroup
     const { forward, backward, left, right } = horseMovement
     const isMoving = isHorseMode && (forward || backward)
     const speed = horseMovement.sprint ? SPRINT_SPEED : WALK_SPEED
@@ -159,7 +153,7 @@ const Horse = () => {
         let isFoliage = false
         let obj = hit.object
         while(obj) { 
-          if (obj === horseRef.current) isHorsePart = true
+          if (obj === horseGroup) isHorsePart = true
           const n = (obj.name || "").toLowerCase()
           if (n && (n.includes('tree') || n.includes('leaf') || n.includes('foliage') || n.includes('plant') || n.includes('bush') || n.includes('flower'))) isFoliage = true
           obj = obj.parent 
@@ -208,7 +202,6 @@ const Horse = () => {
     const behindDir = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current))
     const camBob = horseMovement.sprint ? Math.sin(state.clock.getElapsedTime() * 12) * 0.06 : 0
     const idealCamPos = horse.position.clone().addScaledVector(behindDir, CAM_BEHIND).add(new THREE.Vector3(0, CAM_UP + camBob, 0))
-    const dir = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
     const idealLookAt = horse.position.clone().addScaledVector(dir, 1.8).add(new THREE.Vector3(0, CAM_UP * 0.45, 0))
     cameraPos.current.lerp(idealCamPos, CAM_LERP)
     cameraTarget.current.lerp(idealLookAt, CAM_LERP)
@@ -221,18 +214,27 @@ const Horse = () => {
 
   return (
     <>
-      <group ref={horseRef} position={horsePosition} rotation={horseRotation} scale={horseScale}>
+      <group 
+        ref={(node) => {
+          horseRef.current = node
+          setHorseGroup(node)
+        }} 
+        position={horsePosition} 
+        rotation={horseRotation} 
+        scale={horseScale}
+      >
         <primitive object={scene} />
         {wireframeScene && <primitive object={wireframeScene} />}
       </group>
 
-      {isHorsePlacementMode && horseRef.current && (
+      {isHorsePlacementMode && horseGroup && (
         <TransformControls
-          object={horseRef.current}
+          object={horseGroup}
           mode={horseTransformMode}
           onMouseUp={() => {
-            if (!horseRef.current) return
-            const { position: p, rotation: r, scale: s } = horseRef.current
+            const p = horseGroup.position
+            const r = horseGroup.rotation
+            const s = horseGroup.scale
             setHorsePosition([p.x, p.y, p.z])
             setHorseRotation([r.x, r.y, r.z])
             setHorseScale([s.x, s.y, s.z])

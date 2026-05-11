@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2, Video, VideoOff, Ruler } from 'lucide-react'
+import { Home, User, Briefcase, Mail, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Settings2 } from 'lucide-react'
 import EagleControlsUI from './EagleControlsUI'
 import HorseControlsUI from './HorseControlsUI'
 

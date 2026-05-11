@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react'
+import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { BakeShadows, Center, Environment, OrbitControls, Sky, Sparkles, Stars, PerspectiveCamera, useGLTF } from '@react-three/drei'
+import { Environment, OrbitControls, Sky, PerspectiveCamera, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { useStore } from '../../store/useStore'
@@ -123,7 +123,7 @@ const Experience = () => {
         duration: 2.5, ease: 'power3.inOut',
       })
     }
-  }, [currentView, isDroneMode, isHorseMode])
+  }, [currentView, isDroneMode, isHorseMode, isPlacementMode])
 
   // ── Hotspot camera jump ───────────────────────────────────────────────────────
   const handleHotspotSelect = useCallback((position) => {
