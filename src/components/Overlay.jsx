@@ -252,53 +252,55 @@ const Overlay = () => {
       </AnimatePresence>
 
       {/* ── Arrow Navigation ────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        style={{
-          position:      'absolute',
-          bottom:        mobile ? '24px' : '80px',
-          left:          '50%',
-          transform:     'translateX(-50%)',
-          display:       'flex',
-          gap:           mobile ? '12px' : '16px',
-          alignItems:    'center',
-          pointerEvents: 'auto',
-        }}
-      >
-        <button
-          onClick={handlePrev}
-          className="glass-panel"
-          style={{ border: 'none', padding: mobile ? '8px' : '12px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <ChevronLeft size={mobile ? 18 : 24} />
-        </button>
-
-        <div
-          className="mono"
+      {!isDroneMode && (
+        <motion.div
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
           style={{
-            color:           'white',
-            fontSize:        mobile ? '10px' : '12px',
-            letterSpacing:   '4px',
-            background:      'rgba(0,0,0,0.4)',
-            padding:         mobile ? '6px 16px' : '8px 24px',
-            borderRadius:    '20px',
-            border:          '1px solid rgba(255,255,255,0.1)',
-            backdropFilter:  'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
+            position:      'absolute',
+            bottom:        mobile ? '24px' : '80px',
+            left:          '24px',
+            display:       'flex',
+            gap:           mobile ? '12px' : '16px',
+            alignItems:    'center',
+            pointerEvents: 'auto',
+            zIndex: 20,
           }}
         >
-          {currentView.toUpperCase()}
-        </div>
+          <button
+            onClick={handlePrev}
+            className="glass-panel"
+            style={{ border: 'none', padding: mobile ? '8px' : '12px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <ChevronLeft size={mobile ? 18 : 24} />
+          </button>
 
-        <button
-          onClick={handleNext}
-          className="glass-panel"
-          style={{ border: 'none', padding: mobile ? '8px' : '12px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <ChevronRight size={mobile ? 18 : 24} />
-        </button>
-      </motion.div>
+          <div
+            className="mono"
+            style={{
+              color:           'white',
+              fontSize:        mobile ? '10px' : '12px',
+              letterSpacing:   '4px',
+              background:      'rgba(0,0,0,0.4)',
+              padding:         mobile ? '6px 16px' : '8px 24px',
+              borderRadius:    '20px',
+              border:          '1px solid rgba(255,255,255,0.1)',
+              backdropFilter:  'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+            }}
+          >
+            {currentView.toUpperCase()}
+          </div>
+
+          <button
+            onClick={handleNext}
+            className="glass-panel"
+            style={{ border: 'none', padding: mobile ? '8px' : '12px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <ChevronRight size={mobile ? 18 : 24} />
+          </button>
+        </motion.div>
+      )}
 
       {/* ── Bottom Label (desktop only) ─────────────────────────────────────── */}
       {!mobile && (
