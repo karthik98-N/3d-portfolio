@@ -40,13 +40,11 @@ const Experience = () => {
   const groupRef     = useRef()
 
   const originalMaterials = useMemo(() => new WeakMap(), [])
-  const wireframeMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+  const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     wireframe: true,
     transparent: true,
-    opacity: 0.6,
-    emissiveIntensity: 1.5,
-    metalness: 0,
-    roughness: 1,
+    opacity: 1,
+    color: '#00ffff' // Initial color, will be animated
   }), [])
 
   // ── Model Loading ────────────────────────────────────────────────────────────
@@ -154,7 +152,6 @@ const Experience = () => {
       const hue = (state.clock.getElapsedTime() * 0.15) % 1
       const color = new THREE.Color().setHSL(hue, 0.8, 0.5)
       wireframeMaterial.color.copy(color)
-      wireframeMaterial.emissive.copy(color)
     }
 
     // ── Keyboard Roam for Normal Mode (All views) ───────────────────────────
