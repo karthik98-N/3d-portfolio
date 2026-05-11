@@ -13,16 +13,18 @@ import Rain from './Rain'
 import DynamicSun from './DynamicSun'
 import DynamicMoon from './DynamicMoon'
 import Thunder from './Thunder'
+import Eagle from './Eagle'
+import Flock from './Flock'
 
 // Detect mobile/tablet for performance scaling
 const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
 
 // View positions defined outside component — stable reference, no re-creation on render
 const VIEW_POSITIONS = {
-  home:     { pos: [-100, 150, 100], lookAt: [0, 0, 0], fov: 45 },
-  about:    { pos: [-25, 12, 65],  lookAt: [-35, 10, 75], fov: 40 },
-  projects: { pos: [70, 35, 60],   lookAt: [8, 4, 4],  fov: 35 },
-  contact:  { pos: [-35, 25, -60], lookAt: [0, 0, 0],  fov: 45 },
+  home:     { pos: [-100, 225, 100], lookAt: [0, 50, 0], fov: 45 },
+  about:    { pos: [-25, 18, 65],   lookAt: [-35, 20, 75], fov: 40 },
+  projects: { pos: [70, 52.5, 60],  lookAt: [8, 15, 4],  fov: 35 },
+  contact:  { pos: [-35, 37.5, -60], lookAt: [0, 50, 0],  fov: 45 },
 }
 
 // Shared material instances to avoid GPU re-uploads
@@ -30,7 +32,7 @@ const DAY_GROUND_MATERIAL   = new THREE.MeshStandardMaterial({ color: '#2d4a1d',
 const NIGHT_GROUND_MATERIAL = new THREE.MeshStandardMaterial({ color: '#0a1a05', roughness: 1, metalness: 0 })
 
 const Experience = () => {
-  const { currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode } = useStore()
+  const { currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode, isPlacementMode } = useStore()
   const cameraRef    = useRef()
   const controlsRef  = useRef()
   const groupRef     = useRef()
@@ -62,7 +64,7 @@ const Experience = () => {
 
   // ── Camera animation ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!cameraRef.current || isDroneMode) return
+    if (!cameraRef.current || isDroneMode || isPlacementMode) return
     const target = VIEW_POSITIONS[currentView] ?? VIEW_POSITIONS.home
 
     gsap.killTweensOf(cameraRef.current.position)
@@ -108,9 +110,13 @@ const Experience = () => {
       <OrbitControls
         ref={controlsRef}
         makeDefault
-        enablePan={isDroneMode}
+        enabled={true}
+        enablePan={false}
         enableZoom={true}
         enableRotate={true}
+        zoomSpeed={1.5}
+        minDistance={10}
+        maxDistance={800}
         autoRotate={currentView === 'home' && !isDroneMode}
         autoRotateSpeed={rainLevel === 'high' ? 0.05 : rainLevel === 'medium' ? 0.15 : 0.3} // Slower rotation during rain
         maxPolarAngle={isDroneMode ? Math.PI : Math.PI / 2.1}
@@ -198,6 +204,10 @@ const Experience = () => {
             <Thunder rainLevel={rainLevel} />
           </>
         )}
+        
+        {/* Atmospheric Life */}
+        <Flock count={25} />
+        <Eagle />
 
         {/* Forest — 4 cardinal positions */}
         <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>

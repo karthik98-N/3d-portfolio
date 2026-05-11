@@ -7,12 +7,26 @@ export const useStore = create((set) => ({
   isDayTime: false,
   rainLevel: 'none', // 'none', 'low', 'medium', 'high'
   isDroneMode: false,
+  isPlacementMode: false,
   isEnvironmentFixed: false,
   dayPhase: 'noon', // 'sunrise', 'noon', 'evening'
   nightPhase: 'mid', // 'early', 'mid', 'post'
   coreState: 'venom', // 'venom', 'linkedin', 'mail', 'youtube'
+  eagleSpawnPosition: [0, 60, 0],
+  eagleCameraOffset: [100, 20, -200],
+  eagleScale: 1.0,
+  eagleMovementParams: { speed: 0.5, rotSpeed: 0.01 },
+  eagleMovement: { forward: false, backward: false, left: false, right: false, up: false, down: false },
   setView: (view) => set({ currentView: view }),
-  toggleDroneMode: () => set((state) => ({ isDroneMode: !state.isDroneMode })),
+  setEagleSpawnPosition: (pos) => set({ eagleSpawnPosition: pos }),
+  setEagleCameraOffset: (offset) => set({ eagleCameraOffset: offset }),
+  isFreeLook: false,
+  setIsFreeLook: (val) => set({ isFreeLook: val }),
+  setEagleScale: (scale) => set({ eagleScale: scale }),
+  setEagleMovementParams: (params) => set((state) => ({ eagleMovementParams: { ...state.eagleMovementParams, ...params } })),
+  setEagleMovement: (movement) => set((state) => ({ eagleMovement: { ...state.eagleMovement, ...movement } })),
+  toggleDroneMode: () => set((state) => ({ isDroneMode: !state.isDroneMode, isPlacementMode: false })),
+  togglePlacementMode: () => set((state) => ({ isPlacementMode: !state.isPlacementMode, isDroneMode: false })),
   toggleEnvironmentFix: () => set((state) => ({ isEnvironmentFixed: !state.isEnvironmentFixed })),
   setStarted: (started) => set({ isStarted: started }),
   setLoading: (loading) => set({ isLoading: loading }),

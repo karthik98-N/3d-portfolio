@@ -1,7 +1,8 @@
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu } from 'lucide-react'
+import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2 } from 'lucide-react'
+import EagleControlsUI from './EagleControlsUI'
 import useBreakpoint from '../hooks/useBreakpoint'
 
 const Overlay = () => {
@@ -12,7 +13,11 @@ const Overlay = () => {
     dayPhase, nextDayPhase,
     nightPhase, nextNightPhase,
     isDroneMode, toggleDroneMode,
+    isPlacementMode, togglePlacementMode,
+    eagleScale, setEagleScale,
+    eagleMovementParams, setEagleMovementParams
   } = useStore()
+  const [isEagleSettingsOpen, setIsEagleSettingsOpen] = React.useState(false)
   const { isMobile } = useBreakpoint()
 
   if (!isStarted) return null
@@ -126,15 +131,25 @@ const Overlay = () => {
           {rainLevel === 'high' && <CloudLightning size={mobile ? 16 : 20} style={{ color: '#0ea5e9', filter: 'drop-shadow(0 0 8px #0ea5e9)' }} />}
         </button>
 
-        {/* Drone Mode */}
         <button
-          onClick={toggleDroneMode}
-          title={isDroneMode ? 'Exit Drone Mode' : 'Enter Drone Mode'}
+          onClick={() => setIsEagleSettingsOpen(!isEagleSettingsOpen)}
+          title="Eagle Settings"
           style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
         >
-          <Activity
+          <Settings2
             size={mobile ? 16 : 20}
-            style={{ color: isDroneMode ? '#ef4444' : '#94a3b8', filter: isDroneMode ? 'drop-shadow(0 0 5px #ef4444)' : 'none' }}
+            style={{ color: isEagleSettingsOpen ? '#38bdf8' : '#94a3b8' }}
+          />
+        </button>
+
+        <button
+          onClick={toggleDroneMode}
+          title={isDroneMode ? 'Exit Eagle Mode' : 'Enter Eagle Mode'}
+          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
+        >
+          <Bird
+            size={mobile ? 16 : 20}
+            style={{ color: isDroneMode ? '#38bdf8' : '#94a3b8', filter: isDroneMode ? 'drop-shadow(0 0 5px #38bdf8)' : 'none' }}
           />
         </button>
 
@@ -145,6 +160,84 @@ const Overlay = () => {
           </>
         )}
       </motion.div>
+
+      {/* ── Eagle Settings Panel ────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {isEagleSettingsOpen && (
+          <motion.div
+            initial={{ x: 200, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 200, opacity: 0 }}
+            className="glass-panel"
+            style={{
+              position: 'absolute',
+              right: mobile ? '60px' : '90px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '240px',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              pointerEvents: 'auto',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              zIndex: 30,
+            }}
+          >
+            <div className="mono" style={{ color: '#38bdf8', fontSize: '12px', letterSpacing: '2px', marginBottom: '4px' }}>EAGLE_CALIBRATION</div>
+            
+            {/* Scale Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span className="mono" style={{ color: '#94a3b8', fontSize: '10px' }}>UNIT_SCALE</span>
+                <span className="mono" style={{ color: 'white', fontSize: '10px' }}>{eagleScale.toFixed(4)}</span>
+              </div>
+              <input 
+                type="range" min="0.0001" max="1.0" step="0.0001" 
+                value={eagleScale} 
+                onChange={(e) => setEagleScale(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: '#38bdf8' }}
+              />
+            </div>
+
+            {/* Speed Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span className="mono" style={{ color: '#94a3b8', fontSize: '10px' }}>THRUST_VELOCITY</span>
+                <span className="mono" style={{ color: 'white', fontSize: '10px' }}>{eagleMovementParams?.speed || 0.5}</span>
+              </div>
+              <input 
+                type="range" min="0.1" max="50.0" step="0.1" 
+                value={eagleMovementParams?.speed || 0.5} 
+                onChange={(e) => setEagleMovementParams({ speed: parseFloat(e.target.value) })}
+                style={{ width: '100%', accentColor: '#38bdf8' }}
+              />
+            </div>
+
+            {/* Turning Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span className="mono" style={{ color: '#94a3b8', fontSize: '10px' }}>GYRO_SENSITIVITY</span>
+                <span className="mono" style={{ color: 'white', fontSize: '10px' }}>{eagleMovementParams?.rotSpeed || 0.01}</span>
+              </div>
+              <input 
+                type="range" min="0.01" max="5.0" step="0.01" 
+                value={eagleMovementParams?.rotSpeed || 0.01} 
+                onChange={(e) => setEagleMovementParams({ rotSpeed: parseFloat(e.target.value) })}
+                style={{ width: '100%', accentColor: '#38bdf8' }}
+              />
+            </div>
+
+            <button 
+              onClick={() => setIsEagleSettingsOpen(false)}
+              className="mono"
+              style={{ padding: '8px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid #38bdf8', color: '#38bdf8', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', marginTop: '8px' }}
+            >
+              CLOSE_PANEL
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Arrow Navigation ────────────────────────────────────────────────── */}
       <motion.div
@@ -201,6 +294,9 @@ const Overlay = () => {
           Sector: <span style={{ color: 'white' }}>{currentView.toUpperCase()}</span> / <span style={{ color: '#38bdf8' }}>NKS_CORE</span>
         </div>
       )}
+
+      {/* ── Eagle Controls (Overlay) ────────────────────────────────────────── */}
+      <EagleControlsUI />
     </div>
   )
 }
