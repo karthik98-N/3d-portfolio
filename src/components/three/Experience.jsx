@@ -42,7 +42,7 @@ const Experience = () => {
   const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     wireframe: true,
     transparent: true,
-    opacity: 0.8,
+    opacity: IS_MOBILE ? 0.3 : 0.8,
     color: '#00ffff'
   }), [])
 
@@ -283,11 +283,19 @@ const Experience = () => {
         <Eagle />
         <Horse />
 
-        {/* Forest — 4 cardinal positions */}
-        <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
-        {forestScenes[0] && <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>}
-        {forestScenes[1] && <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>}
-        {forestScenes[2] && <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>}
+        {/* Forest — 4 cardinal positions (Reduced on mobile wireframe) */}
+        {(!IS_MOBILE || isStarted) && (
+          <Center top position={[0,   -30,  80]}><primitive object={forestScene} scale={[50,50,50]} /></Center>
+        )}
+        {forestScenes[0] && (!IS_MOBILE || isStarted) && (
+          <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
+        )}
+        {forestScenes[1] && (!IS_MOBILE || isStarted) && (
+          <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
+        )}
+        {forestScenes[2] && (!IS_MOBILE || isStarted) && (
+          <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
+        )}
 
         {/* Ground plane */}
         <mesh rotation-x={-Math.PI / 2} position={[0, -2.1, 0]} receiveShadow material={groundMat}>
