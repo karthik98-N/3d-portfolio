@@ -42,51 +42,42 @@ const Experience = () => {
   const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     wireframe: true,
     transparent: true,
-    opacity: 1,
-    color: '#00ffff' 
+    opacity: 0.8,
+    color: '#00ffff'
   }), [])
 
   // ── Model Loading ────────────────────────────────────────────────────────────
   const { scene }  = useGLTF('/jadeite_village_environment.glb')
   const { scene: forestScene } = useGLTF('/low_poly_forest.glb')
 
-  // Create Digital versions of the scenes once
-  const digitalScene = useMemo(() => {
-    if (!scene) return null
-    const clone = scene.clone()
-    clone.traverse(child => {
-      if (child.isMesh) child.material = wireframeMaterial
-    })
-    return clone
-  }, [scene, wireframeMaterial])
-
   const forestScenes = useMemo(() => {
     if (!forestScene) return []
     return [forestScene.clone(), forestScene.clone(), forestScene.clone()]
   }, [forestScene])
 
-  const forestDigitalScenes = useMemo(() => {
-    if (!forestScene) return []
-    return [forestScene.clone(), forestScene.clone(), forestScene.clone()].map(s => {
-      s.traverse(child => {
-        if (child.isMesh) child.material = wireframeMaterial
-      })
-      return s
-    })
-  }, [forestScene, wireframeMaterial])
-
-  // ── Shadow / Day-Night traversal ─────────────────────────────────────────────
+  // ── Shadow traversal ────────────────────────────────────────────────────────
   useEffect(() => {
     const targets = [scene, forestScene, ...forestScenes]
     targets.forEach((s) => {
       if (!s) return
       s.traverse((child) => {
-        if (!child.isMesh) return
-        child.castShadow    = true
-        child.receiveShadow = true
+        if (child.isMesh) {
+          child.castShadow    = true
+          child.receiveShadow = true
+        }
       })
     })
   }, [scene, forestScene, forestScenes])
+
+  // ── Global Material Override (Digital Mode) ──────────────────────────────────
+  useFrame((state) => {
+    state.scene.overrideMaterial = isStarted ? null : wireframeMaterial
+    
+    if (!isStarted) {
+      const hue = (state.clock.getElapsedTime() * 0.15) % 1
+      wireframeMaterial.color.setHSL(hue, 0.8, 0.5)
+    }
+  })
 
   // ── Camera animation ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -267,27 +258,9 @@ const Experience = () => {
 
       {/* ── Environment Models ────────────────────────────────────────────────── */}
       <group ref={groupRef}>
-        {/* Normal Village (Visible after start) */}
-        <group visible={isStarted}>
-          <Center top position={[0, -2, 0]}>
-            <primitive object={scene} scale={1.3} />
-          </Center>
-          <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
-          <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
-          <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
-          <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
-        </group>
-
-        {/* Digital Village (Visible before start) */}
-        <group visible={!isStarted}>
-          <Center top position={[0, -2, 0]}>
-            {digitalScene && <primitive object={digitalScene} scale={1.3} />}
-          </Center>
-          <Center top position={[0,   -30,  80]}><primitive object={forestDigitalScenes[0]} scale={[50,50,50]} /></Center>
-          <Center top position={[0,   -30, -80]}><primitive object={forestDigitalScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
-          <Center top position={[80,  -30,  0]} ><primitive object={forestDigitalScenes[2]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
-          <Center top position={[-80, -30,  0]} ><primitive object={forestDigitalScenes[3]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
-        </group>
+        <Center top position={[0, -2, 0]}>
+          <primitive object={scene} scale={1.3} />
+        </Center>
 
         <DynamicCore />
         <VillageLights />
@@ -309,6 +282,12 @@ const Experience = () => {
         <Flock count={25} />
         <Eagle />
         <Horse />
+
+        {/* Forest — 4 cardinal positions */}
+        <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
+        <Center top position={[0,   -30, -80]}><primitive object={forestScenes[0]} scale={[50,50,50]} rotation={[0, Math.PI, 0]} /></Center>
+        <Center top position={[80,  -30,  0]} ><primitive object={forestScenes[1]} scale={[50,50,50]} rotation={[0, Math.PI / 2, 0]} /></Center>
+        <Center top position={[-80, -30,  0]} ><primitive object={forestScenes[2]} scale={[50,50,50]} rotation={[0, -Math.PI / 2, 0]} /></Center>
 
         {/* Ground plane */}
         <mesh rotation-x={-Math.PI / 2} position={[0, -2.1, 0]} receiveShadow material={groundMat}>
