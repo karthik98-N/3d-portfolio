@@ -208,6 +208,7 @@ const Horse = () => {
     const behindDir = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current))
     const camBob = horseMovement.sprint ? Math.sin(state.clock.getElapsedTime() * 12) * 0.06 : 0
     const idealCamPos = horse.position.clone().addScaledVector(behindDir, CAM_BEHIND).add(new THREE.Vector3(0, CAM_UP + camBob, 0))
+    const dir = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
     const idealLookAt = horse.position.clone().addScaledVector(dir, 1.8).add(new THREE.Vector3(0, CAM_UP * 0.45, 0))
     cameraPos.current.lerp(idealCamPos, CAM_LERP)
     cameraTarget.current.lerp(idealLookAt, CAM_LERP)
