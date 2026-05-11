@@ -17,6 +17,16 @@ export const useStore = create((set) => ({
   eagleScale: 1.0,
   eagleMovementParams: { speed: 0.5, rotSpeed: 0.01 },
   eagleMovement: { forward: false, backward: false, left: false, right: false, up: false, down: false },
+  horsePosition: [9.40, 7.42, 55.57],
+  horseRotation: [0, 0, 0],
+  horseScale: [0.03, 0.03, 0.03],
+  horseRGBIntensity: 5,
+  horseRGBSpeed: 2,
+  horseGroundAdjustment: 0,
+  horseTransformMode: 'translate',
+  isHorsePlacementMode: false,
+  isHorseMode: false,
+  horseMovement: { forward: false, backward: false, left: false, right: false, sprint: false },
   setView: (view) => set({ currentView: view }),
   setEagleSpawnPosition: (pos) => set({ eagleSpawnPosition: pos }),
   setEagleCameraOffset: (offset) => set({ eagleCameraOffset: offset }),
@@ -25,6 +35,20 @@ export const useStore = create((set) => ({
   setEagleScale: (scale) => set({ eagleScale: scale }),
   setEagleMovementParams: (params) => set((state) => ({ eagleMovementParams: { ...state.eagleMovementParams, ...params } })),
   setEagleMovement: (movement) => set((state) => ({ eagleMovement: { ...state.eagleMovement, ...movement } })),
+  setHorsePosition: (pos) => set({ horsePosition: pos }),
+  setHorseRotation: (rot) => set({ horseRotation: rot }),
+  setHorseScale: (scl) => set({ horseScale: scl }),
+  setHorseRGBIntensity: (intensity) => set({ horseRGBIntensity: intensity }),
+  setHorseRGBSpeed: (speed) => set({ horseRGBSpeed: speed }),
+  setHorseGroundAdjustment: (adj) => set({ horseGroundAdjustment: adj }),
+  setHorseTransformMode: (mode) => set({ horseTransformMode: mode }),
+  toggleHorsePlacementMode: () => set((state) => ({ isHorsePlacementMode: !state.isHorsePlacementMode })),
+  toggleHorseMode: () => set((state) => ({ 
+    isHorseMode: !state.isHorseMode, 
+    isHorsePlacementMode: false,
+    isDroneMode: false 
+  })),
+  setHorseMovement: (movement) => set((state) => ({ horseMovement: { ...state.horseMovement, ...movement } })),
   toggleDroneMode: () => set((state) => {
     const nextDroneMode = !state.isDroneMode;
     return { 

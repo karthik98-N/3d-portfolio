@@ -1,8 +1,10 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2, Video, VideoOff } from 'lucide-react'
+import { Home, User, Briefcase, Mail, Activity, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Move, Settings2, Video, VideoOff, Ruler } from 'lucide-react'
 import EagleControlsUI from './EagleControlsUI'
+import HorseSettingsUI from './HorseSettingsUI'
+import HorseControlsUI from './HorseControlsUI'
 import useBreakpoint from '../hooks/useBreakpoint'
 
 const Overlay = () => {
@@ -14,6 +16,8 @@ const Overlay = () => {
     nightPhase, nextNightPhase,
     isDroneMode, toggleDroneMode,
     isPlacementMode, togglePlacementMode,
+    isHorsePlacementMode, toggleHorsePlacementMode,
+    isHorseMode, toggleHorseMode,
     eagleScale, setEagleScale,
     eagleMovementParams, setEagleMovementParams,
     isFreeLook, setIsFreeLook
@@ -88,82 +92,124 @@ const Overlay = () => {
       <motion.div
         initial={{ x: 100 }}
         animate={{ x: 0 }}
-        className="glass-panel"
         style={{
-          position:      'absolute',
-          right:         mobile ? '10px' : '24px',
-          top:           '50%',
-          transform:     'translateY(-50%)',
-          display:       'flex',
-          flexDirection: 'column',
-          gap:           mobile ? '16px' : '28px',
-          padding:       mobile ? '10px 8px' : '16px',
-          pointerEvents: 'auto',
-          alignItems:    'center',
+          position:        'absolute',
+          right:           mobile ? '8px' : '20px',
+          top:             mobile ? '15%' : '12%',
+          transform:       'none',
+          display:         'flex',
+          flexDirection:   'column',
+          gap:             mobile ? '4px' : '6px',
+          padding:         mobile ? '10px 8px' : '14px 10px',
+          pointerEvents:   'auto',
+          alignItems:      'center',
+          background:      'rgba(2, 6, 23, 0.82)',
+          backdropFilter:  'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border:          '1px solid rgba(56, 189, 248, 0.25)',
+          borderRadius:    '18px',
+          boxShadow:       '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
         }}
       >
-        {/* Day/Night */}
-        <button onClick={toggleDayTime} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
-          {isDayTime
-            ? <Sun  size={mobile ? 16 : 20} style={{ color: '#fbbf24' }} />
-            : <Moon size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
-        </button>
-
-        {/* Free Look Toggle */}
-        <button 
-          onClick={() => setIsFreeLook(!isFreeLook)} 
-          title={isFreeLook ? 'Exit Free Look' : 'Enter Free Look'}
-          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-        >
-          {isFreeLook 
-            ? <Video size={mobile ? 16 : 20} style={{ color: '#38bdf8', filter: 'drop-shadow(0 0 5px #38bdf8)' }} />
-            : <VideoOff size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
-        </button>
-
-        {/* Phase cycler */}
-        <button
-          onClick={isDayTime ? nextDayPhase : nextNightPhase}
-          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-        >
-          <Cpu
-            size={mobile ? 14 : 18}
-            style={{
+        {/* ── Sidebar button helper ── */}
+        {[
+          {
+            label: 'TIME',
+            onClick: toggleDayTime,
+            icon: isDayTime
+              ? <Sun  size={mobile ? 18 : 22} style={{ color: '#fbbf24' }} />
+              : <Moon size={mobile ? 18 : 22} style={{ color: '#94a3b8' }} />,
+            active: false,
+          },
+          {
+            label: 'LOOK',
+            onClick: () => setIsFreeLook(!isFreeLook),
+            title: isFreeLook ? 'Exit Free Look' : 'Enter Free Look',
+            icon: isFreeLook
+              ? <Video    size={mobile ? 18 : 22} style={{ color: '#38bdf8' }} />
+              : <VideoOff size={mobile ? 18 : 22} style={{ color: '#64748b' }} />,
+            active: isFreeLook,
+          },
+          {
+            label: 'PHASE',
+            onClick: isDayTime ? nextDayPhase : nextNightPhase,
+            icon: <Cpu size={mobile ? 16 : 20} style={{
               color: isDayTime
                 ? (dayPhase === 'sunrise' ? '#f59e0b' : dayPhase === 'noon' ? '#ffffff' : '#f43f5e')
-                : (nightPhase === 'early'  ? '#94a3b8' : nightPhase === 'mid' ? '#ffffff' : '#38bdf8'),
+                : (nightPhase === 'early' ? '#94a3b8' : nightPhase === 'mid' ? '#ffffff' : '#38bdf8'),
+            }} />,
+            active: false,
+          },
+          {
+            label: 'RAIN',
+            onClick: nextRainLevel,
+            icon: rainLevel === 'none'   ? <Cloud         size={mobile ? 18 : 22} style={{ color: '#64748b' }} />
+                : rainLevel === 'low'    ? <CloudDrizzle  size={mobile ? 18 : 22} style={{ color: '#7dd3fc' }} />
+                : rainLevel === 'medium' ? <CloudRain     size={mobile ? 18 : 22} style={{ color: '#38bdf8' }} />
+                :                          <CloudLightning size={mobile ? 18 : 22} style={{ color: '#0ea5e9' }} />,
+            active: rainLevel !== 'none',
+          },
+          {
+            label: 'SET',
+            onClick: () => setIsEagleSettingsOpen(!isEagleSettingsOpen),
+            icon: <Settings2 size={mobile ? 18 : 22} style={{ color: isEagleSettingsOpen ? '#38bdf8' : '#94a3b8' }} />,
+            active: isEagleSettingsOpen,
+          },
+          {
+            label: 'PLACE',
+            onClick: toggleHorsePlacementMode,
+            icon: <Ruler size={mobile ? 18 : 22} style={{ color: isHorsePlacementMode ? '#38bdf8' : '#94a3b8' }} />,
+            active: isHorsePlacementMode,
+          },
+          {
+            label: 'RIDE',
+            onClick: toggleHorseMode,
+            icon: <span style={{ fontSize: mobile ? 18 : 22, lineHeight: 1 }}>🐎</span>,
+            active: isHorseMode,
+          },
+          {
+            label: 'FLY',
+            onClick: toggleDroneMode,
+            icon: <Bird size={mobile ? 18 : 22} style={{ color: isDroneMode ? '#38bdf8' : '#94a3b8' }} />,
+            active: isDroneMode,
+          },
+        ].filter(btn => {
+          // Hide these buttons by default in normal mode and horse mode as requested
+          if (['LOOK', 'PLACE', 'FLY'].includes(btn.label)) return false
+          if (isHorseMode && ['SET'].includes(btn.label)) return false
+          return true
+        }).map(({ label, onClick, icon, active, title }) => (
+          <button
+            key={label}
+            onClick={onClick}
+            title={title || label}
+            style={{
+              border:       active ? '1px solid rgba(56,189,248,0.5)' : '1px solid transparent',
+              background:   active ? 'rgba(56,189,248,0.15)' : 'transparent',
+              cursor:       'pointer',
+              padding:      mobile ? '6px' : '8px 10px',
+              borderRadius: '10px',
+              display:      'flex',
+              flexDirection:'column',
+              alignItems:   'center',
+              gap:          '4px',
+              transition:   'all 0.2s ease',
+              boxShadow:    active ? '0 0 10px rgba(56,189,248,0.3)' : 'none',
+              minWidth:     mobile ? '32px' : '44px',
             }}
-          />
-        </button>
-
-        {/* Weather Multi-Level */}
-        <button onClick={nextRainLevel} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
-          {rainLevel === 'none' && <Cloud size={mobile ? 16 : 20} style={{ color: '#94a3b8' }} />}
-          {rainLevel === 'low' && <CloudDrizzle size={mobile ? 16 : 20} style={{ color: '#7dd3fc', filter: 'drop-shadow(0 0 2px #7dd3fc)' }} />}
-          {rainLevel === 'medium' && <CloudRain size={mobile ? 16 : 20} style={{ color: '#38bdf8', filter: 'drop-shadow(0 0 5px #38bdf8)' }} />}
-          {rainLevel === 'high' && <CloudLightning size={mobile ? 16 : 20} style={{ color: '#0ea5e9', filter: 'drop-shadow(0 0 8px #0ea5e9)' }} />}
-        </button>
-
-        <button
-          onClick={() => setIsEagleSettingsOpen(!isEagleSettingsOpen)}
-          title="Eagle Settings"
-          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-        >
-          <Settings2
-            size={mobile ? 16 : 20}
-            style={{ color: isEagleSettingsOpen ? '#38bdf8' : '#94a3b8' }}
-          />
-        </button>
-
-        <button
-          onClick={toggleDroneMode}
-          title={isDroneMode ? 'Exit Eagle Mode' : 'Enter Eagle Mode'}
-          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-        >
-          <Bird
-            size={mobile ? 16 : 20}
-            style={{ color: isDroneMode ? '#38bdf8' : '#94a3b8', filter: isDroneMode ? 'drop-shadow(0 0 5px #38bdf8)' : 'none' }}
-          />
-        </button>
+          >
+            {icon}
+            {!mobile && (
+              <span style={{
+                fontSize:      '8px',
+                fontFamily:    'JetBrains Mono',
+                letterSpacing: '1px',
+                color:         active ? '#38bdf8' : '#475569',
+                marginTop:     '1px',
+              }}>{label}</span>
+            )}
+          </button>
+        ))}
 
         {!mobile && (
           <>
@@ -311,6 +357,8 @@ const Overlay = () => {
 
       {/* ── Eagle Controls (Overlay) ────────────────────────────────────────── */}
       <EagleControlsUI />
+      <HorseSettingsUI />
+      <HorseControlsUI />
     </div>
   )
 }

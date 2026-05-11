@@ -15,6 +15,8 @@ import DynamicMoon from './DynamicMoon'
 import Thunder from './Thunder'
 import Eagle from './Eagle'
 import Flock from './Flock'
+import Horse from './Horse'
+
 
 // Detect mobile/tablet for performance scaling
 const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
@@ -32,7 +34,7 @@ const DAY_GROUND_MATERIAL   = new THREE.MeshStandardMaterial({ color: '#2d4a1d',
 const NIGHT_GROUND_MATERIAL = new THREE.MeshStandardMaterial({ color: '#0a1a05', roughness: 1, metalness: 0 })
 
 const Experience = () => {
-  const { currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode, isPlacementMode } = useStore()
+  const { currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode, isPlacementMode, isHorseMode } = useStore()
   const cameraRef    = useRef()
   const controlsRef  = useRef()
   const groupRef     = useRef()
@@ -64,7 +66,7 @@ const Experience = () => {
 
   // ── Camera animation ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!cameraRef.current || isDroneMode || isPlacementMode) return
+    if (!cameraRef.current || isDroneMode || isPlacementMode || isHorseMode) return
     const target = VIEW_POSITIONS[currentView] ?? VIEW_POSITIONS.home
 
     gsap.killTweensOf(cameraRef.current.position)
@@ -85,7 +87,7 @@ const Experience = () => {
         duration: 2.5, ease: 'power3.inOut',
       })
     }
-  }, [currentView, isDroneMode])
+  }, [currentView, isDroneMode, isHorseMode])
 
   // ── Hotspot camera jump ───────────────────────────────────────────────────────
   const handleHotspotSelect = useCallback((position) => {
@@ -110,15 +112,15 @@ const Experience = () => {
       <OrbitControls
         ref={controlsRef}
         makeDefault
-        enabled={true}
+        enabled={!isHorseMode}
         enablePan={false}
         enableZoom={true}
         enableRotate={true}
         zoomSpeed={1.5}
         minDistance={10}
         maxDistance={800}
-        autoRotate={currentView === 'home' && !isDroneMode}
-        autoRotateSpeed={rainLevel === 'high' ? 0.05 : rainLevel === 'medium' ? 0.15 : 0.3} // Slower rotation during rain
+        autoRotate={currentView === 'home' && !isDroneMode && !isHorseMode}
+        autoRotateSpeed={rainLevel === 'high' ? 0.05 : rainLevel === 'medium' ? 0.15 : 0.3}
         maxPolarAngle={isDroneMode ? Math.PI : Math.PI / 2.1}
         minPolarAngle={0}
         enableDamping
@@ -208,6 +210,8 @@ const Experience = () => {
         {/* Atmospheric Life */}
         <Flock count={25} />
         <Eagle />
+        <Horse />
+
 
         {/* Forest — 4 cardinal positions */}
         <Center top position={[0,   -30,  80]}><primitive object={forestScene}     scale={[50,50,50]} /></Center>
