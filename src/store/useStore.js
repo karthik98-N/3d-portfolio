@@ -26,6 +26,7 @@ export const useStore = create((set) => ({
   horseTransformMode: 'translate',
   isHorsePlacementMode: false,
   isHorseMode: false,
+  isTouchToMoveEnabled: false,
   horseMovement: { forward: false, backward: false, left: false, right: false, sprint: false },
   setView: (view) => set({ currentView: view }),
   setEagleSpawnPosition: (pos) => set({ eagleSpawnPosition: pos }),
@@ -91,4 +92,5 @@ export const useStore = create((set) => ({
     const nextIndex = (currentIndex + 1) % states.length;
     return { coreState: states[nextIndex] };
   }),
+  toggleTouchToMove: () => set((state) => ({ isTouchToMoveEnabled: !state.isTouchToMoveEnabled })),
 }));

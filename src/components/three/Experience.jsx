@@ -34,17 +34,72 @@ const DAY_GROUND_MATERIAL   = new THREE.MeshStandardMaterial({ color: '#2d4a1d',
 const NIGHT_GROUND_MATERIAL = new THREE.MeshStandardMaterial({ color: '#0a1a05', roughness: 1, metalness: 0 })
 
 const Experience = () => {
-  const { isStarted, currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, isDroneMode, isPlacementMode, isHorseMode } = useStore()
+  const { 
+    isStarted, currentView, setView, isDayTime, rainLevel, dayPhase, nightPhase, 
+    isDroneMode, isPlacementMode, isHorseMode,
+    isTouchToMoveEnabled, setHorseMovement, setEagleMovement 
+  } = useStore()
   const cameraRef    = useRef()
   const controlsRef  = useRef()
   const groupRef     = useRef()
 
-  const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({
-    wireframe: true,
-    transparent: true,
-    opacity: IS_MOBILE ? 0.3 : 0.8,
-    color: '#00ffff'
-  }), [])
+  const lidarMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      wireframe: true,
+      uniforms: {
+        uTime: { value: 0 },
+        uScanPosition: { value: 0 },
+        uColor: { value: new THREE.Color('#00f2ff') },
+        uOpacity: { value: IS_MOBILE ? 0.3 : 0.8 }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uScanPosition;
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        varying vec3 vWorldPosition;
+
+        void main() {
+          float dist = abs(vWorldPosition.y - uScanPosition);
+          
+          // Scanning pulse (sharper)
+          float pulse = smoothstep(5.0, 0.0, dist);
+          
+          // Secondary pulse for 'scan line' highlight
+          float line = smoothstep(1.5, 0.0, dist);
+          
+          // Fading trail behind the scan
+          float trail = smoothstep(60.0, 0.0, uScanPosition - vWorldPosition.y);
+          trail = clamp(trail, 0.0, 1.0) * 0.4;
+          
+          // World-space grid effect
+          float gridSize = 20.0;
+          vec2 gridCoords = fract(vWorldPosition.xz / gridSize);
+          float grid = step(0.98, gridCoords.x) + step(0.98, gridCoords.y);
+          grid = clamp(grid, 0.0, 1.0) * 0.5;
+
+          // Edge highlighting / digital twin feel
+          vec3 finalColor = uColor;
+          finalColor += line * vec3(0.8, 1.0, 1.0) * 2.0; // Very bright scan line
+          finalColor += pulse * vec3(0.2, 0.5, 0.8);      // Blue-ish pulse
+          finalColor += grid * uColor * 0.3;              // Subtle grid
+
+          float alpha = uOpacity * (0.15 + pulse + trail + grid * 0.5);
+          
+          gl_FragColor = vec4(finalColor, alpha);
+        }
+      `
+    })
+  }, [])
 
   // ── Model Loading ────────────────────────────────────────────────────────────
   const { scene }  = useGLTF('/jadeite_village_environment.glb')
@@ -69,13 +124,35 @@ const Experience = () => {
     })
   }, [scene, forestScene, forestScenes])
 
-  // ── Global Material Override (Digital Mode) ──────────────────────────────────
+  // ── Target Lidar Scan to Models Only ───────────────────────────────────────
+  // We apply the material once when state changes to avoid per-frame traversal.
+  useEffect(() => {
+    if (!groupRef.current) return
+    const group = groupRef.current
+
+    const applyMaterial = (mode) => {
+      group.traverse((child) => {
+        if (child.isMesh) {
+          if (mode === 'lidar') {
+            if (!child.userData.originalMaterial) child.userData.originalMaterial = child.material
+            child.material = lidarMaterial
+          } else {
+            if (child.userData.originalMaterial) child.material = child.userData.originalMaterial
+          }
+        }
+      })
+    }
+
+    applyMaterial(isStarted ? 'normal' : 'lidar')
+  }, [isStarted, lidarMaterial, scene, forestScene]) // Re-run if models load or mode changes
+
   useFrame((state) => {
-    state.scene.overrideMaterial = isStarted ? null : wireframeMaterial
-    
     if (!isStarted) {
-      const hue = (state.clock.getElapsedTime() * 0.15) % 1
-      wireframeMaterial.color.setHSL(hue, 0.8, 0.5)
+      const t = state.clock.getElapsedTime()
+      lidarMaterial.uniforms.uTime.value = t
+      const scanRange = 170
+      const scanPos = -20 + (Math.sin(t * 0.5) * 0.5 + 0.5) * scanRange
+      lidarMaterial.uniforms.uScanPosition.value = scanPos
     }
   })
 
@@ -125,6 +202,39 @@ const Experience = () => {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
   }, [])
 
+  // ── Tap & Hold to Move Logic ────────────────────────────────────────────────
+  const isHoldingRef = useRef(false)
+  useEffect(() => {
+    if (!isTouchToMoveEnabled || !isStarted) return
+
+    const handleDown = (e) => {
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return
+      isHoldingRef.current = true
+      if (isDroneMode) setEagleMovement({ forward: true })
+      if (isHorseMode) setHorseMovement({ forward: true })
+    }
+    const handleUp = () => {
+      if (isHoldingRef.current) {
+        isHoldingRef.current = false
+        if (isDroneMode) setEagleMovement({ forward: false })
+        if (isHorseMode) setHorseMovement({ forward: false })
+      }
+    }
+
+    window.addEventListener('pointerdown', handleDown)
+    window.addEventListener('pointerup', handleUp)
+    window.addEventListener('pointerleave', handleUp)
+
+    return () => {
+      window.removeEventListener('pointerdown', handleDown)
+      window.removeEventListener('pointerup', handleUp)
+      window.removeEventListener('pointerleave', handleUp)
+      // Ensure movement stops if mode is toggled or disabled
+      setEagleMovement({ forward: false })
+      setHorseMovement({ forward: false })
+    }
+  }, [isTouchToMoveEnabled, isStarted, isDroneMode, isHorseMode, setEagleMovement, setHorseMovement])
+
   const isInteractingRef = useRef(false)
   const lastInteractionTime = useRef(0)
 
@@ -132,13 +242,6 @@ const Experience = () => {
   useFrame((state) => {
     const controls = controlsRef.current
     if (!controls) return
-
-    // ── Animate Global RGB Wireframe ─────────────────────────────────────────
-    if (!isStarted) {
-      const hue = (state.clock.getElapsedTime() * 0.15) % 1
-      const color = new THREE.Color().setHSL(hue, 0.8, 0.5)
-      wireframeMaterial.color.copy(color)
-    }
 
     // ── Keyboard Roam for Normal Mode (All views) ───────────────────────────
     if (!isDroneMode && !isHorseMode && isStarted) {

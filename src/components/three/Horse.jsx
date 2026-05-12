@@ -5,9 +5,9 @@ import * as THREE from 'three'
 import { useStore } from '../../store/useStore'
 
 const FLOOR_Y      = -2.1
-const WALK_SPEED   = 2
-const SPRINT_SPEED = 10
-const TURN_SPEED   = 1.5
+const WALK_SPEED   = 6
+const SPRINT_SPEED = 35
+const TURN_SPEED   = 2.2
 const FRICTION     = 0.85
 const CAM_BEHIND   = 9.5
 const CAM_UP       = 6.5
@@ -186,8 +186,8 @@ const Horse = () => {
       const walkFactor = THREE.MathUtils.clamp(curVel / maxWalkVel, 0, 1)
       const runFactor  = THREE.MathUtils.clamp((curVel - maxWalkVel) / (maxRunVel - maxWalkVel), 0, 1)
       a.idle.setEffectiveTimeScale(0.4)
-      a.walk.setEffectiveTimeScale(0.7 + walkFactor * 0.5)
-      a.run.setEffectiveTimeScale(0.9 + runFactor * 0.8)
+      a.walk.setEffectiveTimeScale(1.0 + walkFactor * 1.5)
+      a.run.setEffectiveTimeScale(1.2 + runFactor * 2.0)
     }
 
     // ── Bobbing ───────────────────────────────────────────────────────────

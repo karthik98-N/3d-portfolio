@@ -39,9 +39,16 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  /* Prevent text selection on touch devices */
+  /* Prevent text selection globally */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.selectable, .selectable * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 html, body {

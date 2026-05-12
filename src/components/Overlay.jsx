@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { Home, User, Briefcase, Mail, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Settings2, Video, VideoOff, Ruler } from 'lucide-react'
+import { Home, User, Briefcase, Mail, Sun, Moon, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudDrizzle, CloudLightning, Cpu, Bird, Settings2, Video, VideoOff, Ruler, MousePointer2 } from 'lucide-react'
 import EagleControlsUI from './EagleControlsUI'
 import HorseControlsUI from './HorseControlsUI'
 
@@ -18,9 +18,11 @@ const Overlay = () => {
     isPlacementMode, togglePlacementMode,
     isHorsePlacementMode, toggleHorsePlacementMode,
     isHorseMode, toggleHorseMode,
+    isTouchToMoveEnabled, toggleTouchToMove,
     eagleScale, setEagleScale,
     eagleMovementParams, setEagleMovementParams,
-    isFreeLook, setIsFreeLook
+    isFreeLook, setIsFreeLook,
+    setHorseMovement, setEagleMovement
   } = useStore()
   const [isEagleSettingsOpen, setIsEagleSettingsOpen] = React.useState(false)
   const { isMobile } = useBreakpoint()
@@ -168,14 +170,21 @@ const Overlay = () => {
             active: isHorseMode,
           },
           {
+            label: 'TOUCH',
+            onClick: toggleTouchToMove,
+            icon: <MousePointer2 size={mobile ? 18 : 22} style={{ color: isTouchToMoveEnabled ? '#38bdf8' : '#94a3b8' }} />,
+            active: isTouchToMoveEnabled,
+            title: 'Tap & Hold to Move'
+          },
+          {
             label: 'FLY',
             onClick: toggleDroneMode,
             icon: <Bird size={mobile ? 18 : 22} style={{ color: isDroneMode ? '#38bdf8' : '#94a3b8' }} />,
             active: isDroneMode,
           },
         ].filter(btn => {
-          // Hide LOOK, PLACE, FLY, and SET by default in normal mode
-          if (['LOOK', 'PLACE', 'FLY', 'SET'].includes(btn.label)) return false
+          // Hide LOOK, PLACE, FLY, SET, and TOUCH by default in normal mode
+          if (['LOOK', 'PLACE', 'FLY', 'SET', 'TOUCH'].includes(btn.label)) return false
           return true
         }).map(({ label, onClick, icon, active, title }) => (
           <button

@@ -181,13 +181,13 @@ Users can browse donation categories (clothes, books, groceries, money) and view
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '20px' : '28px', color: '#cbd5e1' }}>
             <p style={{ fontSize: isMobile ? '0.85rem' : '0.92rem', lineHeight: 1.65 }}>{data.text}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ padding: isMobile ? '16px' : '20px', background: 'rgba(15,23,42,0.5)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="selectable" style={{ padding: isMobile ? '16px' : '20px', background: 'rgba(15,23,42,0.5)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <span className="mono" style={{ display: 'block', fontSize: '9px', color: '#64748b', marginBottom: '6px', letterSpacing: '0.15em' }}>EMAIL_ENCRYPTED</span>
                 <a href={`mailto:${data.email}`} style={{ color: '#76bff3', fontWeight: 700, textDecoration: 'none', fontSize: isMobile ? '0.85rem' : '1rem', wordBreak: 'break-all' }}>
                   {data.email}
                 </a>
               </div>
-              <div style={{ padding: isMobile ? '16px' : '20px', background: 'rgba(15,23,42,0.5)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="selectable" style={{ padding: isMobile ? '16px' : '20px', background: 'rgba(15,23,42,0.5)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <span className="mono" style={{ display: 'block', fontSize: '9px', color: '#64748b', marginBottom: '6px', letterSpacing: '0.15em' }}>LINKEDIN_PROFILE</span>
                 <a href={`https://${data.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', fontWeight: 700, textDecoration: 'none', fontSize: isMobile ? '0.82rem' : '0.95rem', wordBreak: 'break-all' }}>
                   {data.linkedin}

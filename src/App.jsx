@@ -56,7 +56,7 @@ function App() {
       {!isStarted && <StartScreen />}
       
       <Canvas
-        shadows={{ type: THREE.PCFSoftShadowMap }}
+        shadows={{ type: THREE.PCFShadowMap }}
         camera={{ position: [0, 2, 5], fov: 45 }}
         gl={{
           antialias: false,
